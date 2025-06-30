@@ -68,25 +68,28 @@ sudo apt upgrade -y
 ### Step 8: Web Server Setup (grml3) (90 minutes)
 1. Install Apache2
 2. Configure basic website
-3. Obtain domain name (use dynamic DNS service)
+3. **Use one of the provided lab domains** (check with instructor)
 4. Install Certbot for Let's Encrypt
-5. Configure TLS/SSL certificate
+5. **Configure TLS/SSL certificate (must be issued on submission date)**
 6. Configure Apache for HTTPS
-7. Test HTTPS access
+7. Test HTTPS access from both internal and external networks
 
 ## Phase 4: Testing & Validation (30 minutes)
 
 ### Step 9: Comprehensive Testing (20 minutes)
-1. Test DNS resolution fr accessrom clients
-2. Test web serve from internal network
+1. Test DNS resolution from clients
+2. Test web server access from internal network
 3. Test external HTTPS access
 4. Verify TLS certificate validity
 5. Test NAT functionality
 
-### Step 10: Documentation (10 minutes)
-1. Document network configuration
-2. Note any issues encountered
-3. Prepare demonstration points
+### Step 10: Documentation & Team Preparation (10 minutes)
+1. Document network configuration with detailed explanations
+2. Note any issues encountered and solutions
+3. **Prepare team members to explain all design components**
+4. **Verify certificate was issued on submission date**
+5. **Run final nmap security scan to ensure no unnecessary ports open**
+6. Prepare demonstration script for presentation
 
 ## Key Security Considerations
 - Firewall rules for minimal attack surface

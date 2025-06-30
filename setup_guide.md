@@ -285,12 +285,17 @@ sudo a2dissite 000-default.conf
 sudo systemctl restart apache2
 ```
 
-### 6. Set up Let's Encrypt (if external domain available)
+### 6. Set up Let's Encrypt (IMPORTANT: Use provided lab domain)
 ```bash
-# For external domain (replace with actual domain)
-# sudo certbot --apache -d yourdomain.com
+# CRITICAL: Use one of the domains provided by your lab instructor
+# The certificate MUST be issued on your submission date
+# Replace "provided-domain.example.com" with actual provided domain
+sudo certbot --apache -d provided-domain.example.com
 
-# For local testing with self-signed certificate
+# Verify certificate date matches submission date
+sudo certbot certificates
+
+# For local testing only (if provided domain not available yet)
 sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
     -keyout /etc/ssl/private/company.local.key \
     -out /etc/ssl/certs/company.local.crt \

@@ -100,10 +100,10 @@
 ## Assignment Requirements Verification ✓
 
 ### Core Requirements ✓
-- [ ] **Web server operational** and accessible over Internet
-- [ ] **TLS support** with public/valid certificate
+- [ ] **Web server operational** and accessible over Internet via PROVIDED domain
+- [ ] **TLS certificate** issued on SUBMISSION DATE (verify with `certbot certificates`)
 - [ ] **Client workstation** can access both Internet and local web server
-- [ ] **DNS server** operational for local queries
+- [ ] **DNS server** operational and being used by all clients
 - [ ] **NAT implementation** with single public IP
 
 ### Security Implementation ✓
@@ -149,14 +149,20 @@ curl -k https://www.company.local
 
 ### Security Tests
 ```bash
-# Check firewall
-sudo iptables -L -n
+# CRITICAL: Security scan (mentioned in submission requirements)
+nmap -sS [external-ip]  # Should show ONLY ports 80, 443, and SSH (if enabled)
 
-# Check services
+# Check firewall rules
+sudo iptables -L -n -v
+
+# Check running services
 ss -tuln
 
-# Test TLS
-openssl s_client -connect www.company.local:443 -servername www.company.local
+# Verify TLS certificate
+openssl s_client -connect [provided-domain]:443 -servername [provided-domain]
+
+# Verify certificate issue date
+sudo certbot certificates | grep "Expiry Date"
 ```
 
 ## Time Management
@@ -167,10 +173,23 @@ openssl s_client -connect www.company.local:443 -servername www.company.local
 - **Hour 5**: TLS configuration and security
 - **Hour 6**: Final testing and documentation
 
-## Last-Minute Check (Final 10 minutes)
+## Submission Requirements Check (Final 15 minutes)
+
+### Team Preparation ✓
+- [ ] **All team members** can explain network design and components
+- [ ] **Architecture diagram** prepared and understood by all
+- [ ] **Security measures** clearly documented and explainable
+- [ ] **Troubleshooting** procedures known by team
+
+### Final Technical Verification ✓
+- [ ] **DNS server** actively used by all workstations (`nslookup` tests)
+- [ ] **Web server** accessible from Internet via PROVIDED domain
+- [ ] **Certificate date** matches submission date (`certbot certificates`)
+- [ ] **Workstation** can reach external web servers AND internal server
+- [ ] **Security scan** shows no unnecessary open ports (`nmap -sS [external-ip]`)
+
+### Documentation & Demo Ready ✓
 - [ ] All services running (`systemctl status`)
 - [ ] Network connectivity verified
-- [ ] Web server accessible via HTTPS
-- [ ] DNS resolution working
-- [ ] Documentation complete
-- [ ] Demo script ready 
+- [ ] Complete documentation ready
+- [ ] Demo script rehearsed by team 
