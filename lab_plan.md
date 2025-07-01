@@ -14,7 +14,7 @@ Design and setup a secure network for a small company with web server, DNS, NAT,
 ### Step 1: Physical Network Setup (15 minutes)
 1. Boot all 6 grml computers (Select grml 2024.02 Standard)
 2. Connect computers via Ethernet switches:
-   - grml1: Router/NAT Gateway (connect to Internet)
+   - grml1: NAT Gateway (connect to Internet)
    - grml2: DNS Server
    - grml3: Web Server
    - grml4-5: Client Workstations
@@ -38,7 +38,7 @@ sudo apt upgrade -y
 
 ## Phase 2: Network Infrastructure (120 minutes)
 
-### Step 4: Configure Router/NAT Gateway (grml1) (45 minutes)
+### Step 4: Configure NAT Gateway (grml1) (45 minutes)
 1. Configure network interfaces
 2. Enable IP forwarding
 3. Set up iptables NAT rules

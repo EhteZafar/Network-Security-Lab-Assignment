@@ -1,29 +1,42 @@
 # Network Security Lab - Detailed Setup Guide
 
-## Machine Roles Overview
-- **grml1**: Router/NAT Gateway (192.168.1.1)
-- **grml2**: DNS Server (192.168.1.2)
-- **grml3**: Web Server (192.168.1.3)
-- **grml4**: Client Workstation (192.168.1.4)
-- **grml5**: Client Workstation (192.168.1.5)
-- **grml6**: Management/Backup (192.168.1.6)
+## Machine Roles Overview (DMZ Architecture)
+- **grml1**: NAT Gateway Machine (Public: 141.76.46.220, DMZ: 192.168.2.1, Internal: 192.168.1.1)
+- **grml2**: DNS Server (192.168.1.2) - Internal Network
+- **grml3**: Web Server (192.168.2.10) - **DMZ Network**
+- **grml4**: Client Workstation (192.168.1.4) - Internal Network
+- **grml5**: Client Workstation (192.168.1.5) - Internal Network
+- **grml6**: Management/Backup (192.168.1.6) - Internal Network
+
+**Network Segmentation:**
+- **External**: 141.76.46.0/24 (Public Internet)
+- **DMZ**: 192.168.2.0/24 (Web Server - Isolated)
+- **Internal**: 192.168.1.0/24 (Clients, DNS, Management)
 
 ---
 
-## grml1: Router/NAT Gateway Configuration
+## grml1: NAT Gateway Configuration
 
-### 1. Network Interface Configuration
+### 1. Network Interface Configuration (Three-Zone Setup)
 ```bash
-# Configure external interface (assuming eth0 for external, eth1 for internal)
-sudo ip addr add 192.168.1.1/24 dev eth1
+# Configure external interface (use provided lab IP)
+sudo ip addr add 141.76.46.220/24 dev eth0
+sudo ip route add default via 141.76.46.254
+
+# Configure DMZ interface (for web server)
+sudo ip addr add 192.168.2.1/24 dev eth1
 sudo ip link set eth1 up
+
+# Configure internal interface (for clients/DNS).
+sudo ip addr add 192.168.1.1/24 dev eth2
+sudo ip link set eth2 up
 
 # Enable IP forwarding
 echo 'net.ipv4.ip_forward=1' | sudo tee -a /etc/sysctl.conf
 sudo sysctl -p
 ```
 
-### 2. NAT and Firewall Rules
+### 2. DMZ Firewall Rules (Three-Zone Security)
 ```bash
 # Clear existing rules
 sudo iptables -F
@@ -37,28 +50,36 @@ sudo iptables -A OUTPUT -o lo -j ACCEPT
 sudo iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 sudo iptables -A FORWARD -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 
-# NAT for internal network
-sudo iptables -t nat -A POSTROUTING -s 192.168.1.0/24 -o eth0 -j MASQUERADE
+# NAT for both networks
+sudo iptables -t nat -A POSTROUTING -s 192.168.1.0/24 -o eth0 -j MASQUERADE  # Internal
+sudo iptables -t nat -A POSTROUTING -s 192.168.2.0/24 -o eth0 -j MASQUERADE  # DMZ
 
-# Allow internal to external
-sudo iptables -A FORWARD -i eth1 -o eth0 -j ACCEPT
+# PORT FORWARDING: External to DMZ Web Server
+sudo iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 80 -j DNAT --to-destination 192.168.2.10:80
+sudo iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 443 -j DNAT --to-destination 192.168.2.10:443
 
-# Port forwarding for web server (HTTP and HTTPS)
-sudo iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 80 -j DNAT --to-destination 192.168.1.3:80
-sudo iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 443 -j DNAT --to-destination 192.168.1.3:443
+# EXTERNAL to DMZ: Allow web traffic only
+sudo iptables -A FORWARD -i eth0 -o eth1 -d 192.168.2.10 -p tcp --dport 80 -j ACCEPT
+sudo iptables -A FORWARD -i eth0 -o eth1 -d 192.168.2.10 -p tcp --dport 443 -j ACCEPT
 
-# Allow forwarded connections to web server
-sudo iptables -A FORWARD -d 192.168.1.3 -p tcp --dport 80 -j ACCEPT
-sudo iptables -A FORWARD -d 192.168.1.3 -p tcp --dport 443 -j ACCEPT
+# INTERNAL to EXTERNAL: Allow all outbound
+sudo iptables -A FORWARD -i eth2 -o eth0 -j ACCEPT
 
-# Allow SSH for management
-sudo iptables -A INPUT -p tcp --dport 22 -j ACCEPT
+# INTERNAL to DMZ: Allow web server access only
+sudo iptables -A FORWARD -i eth2 -o eth1 -d 192.168.2.10 -p tcp --dport 80 -j ACCEPT
+sudo iptables -A FORWARD -i eth2 -o eth1 -d 192.168.2.10 -p tcp --dport 443 -j ACCEPT
 
-# Allow DNS from internal network
-sudo iptables -A INPUT -s 192.168.1.0/24 -p tcp --dport 53 -j ACCEPT
-sudo iptables -A INPUT -s 192.168.1.0/24 -p udp --dport 53 -j ACCEPT
+# DMZ to EXTERNAL: Allow web server outbound (for Let's Encrypt, updates)
+sudo iptables -A FORWARD -i eth1 -o eth0 -s 192.168.2.10 -j ACCEPT
 
-# Default policies
+# DMZ to INTERNAL: Allow DNS queries only
+sudo iptables -A FORWARD -i eth1 -o eth2 -s 192.168.2.10 -d 192.168.1.2 -p tcp --dport 53 -j ACCEPT
+sudo iptables -A FORWARD -i eth1 -o eth2 -s 192.168.2.10 -d 192.168.1.2 -p udp --dport 53 -j ACCEPT
+
+# Management access (SSH from internal only)
+sudo iptables -A INPUT -s 192.168.1.0/24 -p tcp --dport 22 -j ACCEPT
+
+# Default policies (deny all other traffic)
 sudo iptables -P INPUT DROP
 sudo iptables -P FORWARD DROP
 sudo iptables -P OUTPUT ACCEPT
@@ -105,8 +126,9 @@ options {
     // Disable recursion for external queries (security)
     allow-recursion { localhost; 192.168.1.0/24; };
     
-    // Forwarders for external DNS
+    // Forwarders for external DNS (use ZIH DNS as recommended)
     forwarders {
+        141.30.1.1;    // ZIH DNS server
         8.8.8.8;
         8.8.4.4;
     };
@@ -186,11 +208,12 @@ sudo systemctl enable bind9
 
 ## grml3: Web Server Configuration
 
-### 1. Configure Network Interface
+### 1. Configure Network Interface (DMZ)
 ```bash
-sudo ip addr add 192.168.1.3/24 dev eth0
-sudo ip route add default via 192.168.1.1
+sudo ip addr add 192.168.2.10/24 dev eth0
+sudo ip route add default via 192.168.2.1
 echo "nameserver 192.168.1.2" | sudo tee /etc/resolv.conf
+echo "nameserver 141.30.1.1" | sudo tee -a /etc/resolv.conf
 ```
 
 ### 2. Install Apache2 and Dependencies
@@ -222,10 +245,10 @@ sudo tee /var/www/html/index.html > /dev/null <<EOF
     <div class="content">
         <h2>Server Information</h2>
         <ul>
-            <li>Server IP: 192.168.1.3</li>
-            <li>Domain: www.company.local</li>
-            <li>TLS/SSL: Enabled</li>
-            <li>DNS Server: 192.168.1.2</li>
+            <li>Server IP: 192.168.2.10 (DMZ)</li>
+            <li>Domain: netseclab1.inf.tu-dresden.de</li>
+            <li>TLS/SSL: Enabled (Let's Encrypt)</li>
+            <li>DNS Server: 192.168.1.2 + 141.30.1.1</li>
         </ul>
     </div>
     
@@ -287,10 +310,10 @@ sudo systemctl restart apache2
 
 ### 6. Set up Let's Encrypt (IMPORTANT: Use provided lab domain)
 ```bash
-# CRITICAL: Use one of the domains provided by your lab instructor
+# CRITICAL: Use the provided lab domain (choose one)
+# Domain options: netseclab1.inf.tu-dresden.de (141.76.46.220) OR netseclab2.inf.tu-dresden.de (141.76.46.221)
 # The certificate MUST be issued on your submission date
-# Replace "provided-domain.example.com" with actual provided domain
-sudo certbot --apache -d provided-domain.example.com
+sudo certbot --apache -d netseclab1.inf.tu-dresden.de
 
 # Verify certificate date matches submission date
 sudo certbot certificates

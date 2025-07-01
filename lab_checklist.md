@@ -2,18 +2,19 @@
 
 ## Pre-Lab Setup ✓
 - [ ] Boot all 6 grml computers (grml 2024.02 Standard)
-- [ ] Connect network cables and switches
+- [ ] Connect network cables and switches (need 3 switch ports for grml1)
 - [ ] Verify physical connectivity
-- [ ] Plan IP address scheme (192.168.1.0/24)
+- [ ] **Updated Architecture**: DMZ implementation (Internal: 192.168.1.0/24, DMZ: 192.168.2.0/24)
+- [ ] Use provided public IP: 141.76.46.220 or 141.76.46.221
 
 ## Phase 1: Network Infrastructure (120 min)
 
-### grml1 - Router/NAT Gateway ✓
-- [ ] Configure network interfaces (eth0=external, eth1=internal)
-- [ ] Set IP: 192.168.1.1/24
+### grml1 - NAT Gateway ✓ (Three-Zone DMZ)
+- [ ] Configure network interfaces (eth0=external, eth1=DMZ, eth2=internal)
+- [ ] Set IPs: External 141.76.46.220/24, DMZ 192.168.2.1/24, Internal 192.168.1.1/24
 - [ ] Enable IP forwarding (`echo 1 > /proc/sys/net/ipv4/ip_forward`)
 - [ ] Configure iptables NAT rules
-- [ ] Set up port forwarding (80→192.168.1.3:80, 443→192.168.1.3:443)
+- [ ] Set up port forwarding (80→192.168.2.10:80, 443→192.168.2.10:443)
 - [ ] Configure firewall rules (default DROP, allow established)
 - [ ] Test external connectivity
 
@@ -27,8 +28,8 @@
 - [ ] Start BIND9 service
 - [ ] Test DNS resolution locally
 
-### grml3 - Web Server ✓
-- [ ] Set IP: 192.168.1.3/24
+### grml3 - Web Server ✓ (DMZ)
+- [ ] Set IP: 192.168.2.10/24 (DMZ Network)
 - [ ] Install Apache2 (`apt install apache2`)
 - [ ] Install Certbot (`apt install certbot python3-certbot-apache`)
 - [ ] Create basic HTML website
@@ -159,7 +160,7 @@ sudo iptables -L -n -v
 ss -tuln
 
 # Verify TLS certificate
-openssl s_client -connect [provided-domain]:443 -servername [provided-domain]
+openssl s_client -connect netseclab1.inf.tu-dresden.de:443 -servername netseclab1.inf.tu-dresden.de
 
 # Verify certificate issue date
 sudo certbot certificates | grep "Expiry Date"

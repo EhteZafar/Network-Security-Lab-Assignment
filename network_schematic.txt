@@ -1,0 +1,74 @@
+NETWORK SECURITY LAB - SCHEMATIC DRAWING
+==========================================
+
+                           🌐 INTERNET
+                                |
+                    ┌─────────────────────────┐
+                    │   Wall Port EV3-2-2     │
+                    │   Gateway: 141.76.46.254│
+                    └─────────────┬───────────┘
+                                  │
+                        ┌─────────▼─────────┐
+                        │      grml1        │
+                        │   NAT GATEWAY     │
+                        │  🔥 FIREWALL      │
+                        │                   │
+                        │ eth0: 141.76.46.220/24 (External)
+                        │ eth1: 192.168.2.1/24   (DMZ)
+                        │ eth2: 192.168.1.1/24   (Internal)
+                        └─────┬───────┬─────┘
+                              │       │
+                    ┌─────────▼─┐   ┌─▼─────────────────────────┐
+                    │    DMZ    │   │      INTERNAL NETWORK     │
+                    │192.168.2.0│   │      192.168.1.0/24      │
+                    │    /24    │   │                           │
+                    │           │   │  ┌─────┐ ┌─────┐ ┌─────┐  │
+                    │ ┌───────┐ │   │  │grml2│ │grml4│ │grml5│  │
+                    │ │ grml3 │ │   │  │ DNS │ │CLT1 │ │CLT2 │  │
+                    │ │  WEB  │ │   │  │.1.2 │ │.1.4 │ │.1.5 │  │
+                    │ │ .2.10 │ │   │  └─────┘ └─────┘ └─────┘  │
+                    │ └───────┘ │   │                           │
+                    │           │   │        ┌─────┐            │
+                    └───────────┘   │        │grml6│            │
+                                    │        │MGMT │            │
+                                    │        │.1.6 │            │
+                                    │        └─────┘            │
+                                    └───────────────────────────┘
+
+FIREWALL RULES SUMMARY:
+======================
+External → DMZ:     Only ports 80,443 to grml3
+DMZ → External:     Outbound allowed (updates, Let's Encrypt)
+DMZ → Internal:     Only DNS queries (port 53) to grml2
+Internal → DMZ:     Only web access (ports 80,443) to grml3
+Internal → External: All outbound traffic allowed
+
+SERVICES:
+=========
+grml1: NAT Gateway + Firewall (iptables)
+grml2: DNS Server (BIND9) - company.local + forwarder
+grml3: Web Server (Apache2 + TLS) - netseclab1.inf.tu-dresden.de
+grml4: Client Workstation (Firefox + testing tools)
+grml5: Client Workstation (Firefox + testing tools)
+grml6: Management/Monitoring (nmap, tcpdump, backup)
+
+DOMAIN & CERTIFICATES:
+=====================
+Domain: netseclab1.inf.tu-dresden.de (points to 141.76.46.220)
+Alternative: netseclab2.inf.tu-dresden.de (points to 141.76.46.221)
+Certificate: Let's Encrypt (must be issued on submission date)
+DNS Forwarder: 141.30.1.1 (ZIH server)
+
+PHYSICAL CONNECTIONS:
+====================
+- grml1 needs 3 Ethernet connections (external + 2 internal networks)
+- Use switches to connect machines in DMZ and Internal zones
+- Cable from wall port to grml1 eth0 for Internet access
+
+SECURITY FEATURES:
+==================
+✅ Network Segmentation (DMZ isolation)
+✅ Firewall Rules (minimal attack surface)
+✅ NAT Protection (single public IP)
+✅ TLS Encryption (HTTPS only)
+✅ DNS Security (restricted recursion) 
