@@ -18,7 +18,6 @@ Design and setup a secure network for a small company with web server, DNS, NAT,
    - grml2: DNS Server
    - grml3: Web Server
    - grml4-5: Client Workstations
-   - grml6: Management/Backup
 
 ### Step 2: IP Address Planning (15 minutes)
 - Public IP: Assigned by lab network
@@ -27,7 +26,6 @@ Design and setup a secure network for a small company with web server, DNS, NAT,
 - DNS: 192.168.1.2 (grml2)
 - Web Server: 192.168.1.3 (grml3)
 - Clients: 192.168.1.4-5 (grml4-5)
-- Management: 192.168.1.6 (grml6)
 
 ### Step 3: Basic System Updates (30 minutes)
 ```bash
@@ -45,7 +43,7 @@ sudo apt upgrade -y
 4. Configure port forwarding for web server
 5. Basic firewall rules
 
-### Step 5: Configure Internal Network (grml2-6) (45 minutes)
+### Step 5: Configure Internal Network (grml2-5) (45 minutes)
 1. Set static IP addresses on each machine
 2. Configure default gateway
 3. Set DNS server (will be configured next)
@@ -102,7 +100,7 @@ sudo apt upgrade -y
 - If Let's Encrypt fails: Use self-signed certificates
 - If public access fails: Demonstrate local HTTPS
 - If DNS fails: Use static /etc/hosts entries
-- Keep grml6 as backup/troubleshooting machine
+- grml5 can serve as backup if grml4 fails
 
 ## Testing Checklist
 - [ ] Internal network connectivity

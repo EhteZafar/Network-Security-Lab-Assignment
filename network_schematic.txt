@@ -28,12 +28,8 @@ NETWORK SECURITY LAB - SCHEMATIC DRAWING
                     │ │  WEB  │ │   │  │.1.2 │ │.1.4 │ │.1.5 │  │
                     │ │ .2.10 │ │   │  └─────┘ └─────┘ └─────┘  │
                     │ └───────┘ │   │                           │
-                    │           │   │        ┌─────┐            │
-                    └───────────┘   │        │grml6│            │
-                                    │        │MGMT │            │
-                                    │        │.1.6 │            │
-                                    │        └─────┘            │
-                                    └───────────────────────────┘
+                    │           │   │                           │
+                    └───────────┘   └───────────────────────────┘
 
 FIREWALL RULES SUMMARY:
 ======================
@@ -50,7 +46,6 @@ grml2: DNS Server (BIND9) - company.local + forwarder
 grml3: Web Server (Apache2 + TLS) - netseclab1.inf.tu-dresden.de
 grml4: Client Workstation (Firefox + testing tools)
 grml5: Client Workstation (Firefox + testing tools)
-grml6: Management/Monitoring (nmap, tcpdump, backup)
 
 DOMAIN & CERTIFICATES:
 =====================

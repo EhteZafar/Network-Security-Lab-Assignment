@@ -6,7 +6,7 @@ Set up a secure 3-zone network with proper physical connections for the Network 
 
 ## 📦 **Equipment Checklist**
 Before starting, make sure you have:
-- [ ] 6 grml computers (labeled grml1 through grml6)
+- [ ] 5 grml computers (labeled grml1 through grml5)
 - [ ] 2-3 Ethernet switches (small boxes with multiple network ports)
 - [ ] 8-10 Ethernet cables (patch cables with RJ45 connectors)
 - [ ] Access to wall port EV3-2-2 5/9 or EV3-2-2 5/21
@@ -28,8 +28,8 @@ Before starting, make sure you have:
    DMZ     INTERNAL
    Zone     Zone
      ↓       ↓
-  grml3   grml2,grml4,
- (Web)    grml5,grml6
+  grml3   grml2,grml4,grml5
+ (Web)    (Clients/DNS)
 ```
 
 ---
@@ -104,18 +104,16 @@ Switch B (Internal) connections:
 ├─ grml1 eth2 (already connected)
 ├─ grml2 (DNS Server)
 ├─ grml4 (Client 1)
-├─ grml5 (Client 2)
-└─ grml6 (Management)
+└─ grml5 (Client 2)
 ```
 
 **Instructions:**
 1. **grml2 (DNS):** Cable from Switch B → grml2 eth0
 2. **grml4 (Client 1):** Cable from Switch B → grml4 eth0
 3. **grml5 (Client 2):** Cable from Switch B → grml5 eth0
-4. **grml6 (Management):** Cable from Switch B → grml6 eth0
 
 **Internal Zone Complete:**
-- Switch B has 5 cables total
+- Switch B has 4 cables total
 - All internal machines can talk to each other
 - All can reach Internet through grml1
 
@@ -139,12 +137,12 @@ Switch B (Internal) connections:
                ┌─────────▼─┐   ┌─▼─────────────────┐
                │ Switch A  │   │    Switch B       │
                │   (DMZ)   │   │  (INTERNAL)       │
-               └─────┬─────┘   └─┬─┬─┬─┬───────────┘
-                     │           │ │ │ │
-                ┌────▼────┐     │ │ │ └─grml6 (MGMT)
-                │  grml3  │     │ │ └───grml5 (CLT2)
-                │  (WEB)  │     │ └─────grml4 (CLT1)
-                └─────────┘     └───────grml2 (DNS)
+               └─────┬─────┘   └─┬─┬─┬─────────────┘
+                     │           │ │ │
+                ┌────▼────┐     │ │ └───grml5 (CLT2)
+                │  grml3  │     │ └─────grml4 (CLT1)
+                │  (WEB)  │     └───────grml2 (DNS)
+                └─────────┘
 ```
 
 ---
@@ -155,10 +153,10 @@ After connecting all cables, verify:
 
 ### Visual Check
 - [ ] All Ethernet ports show **green/orange LED lights**
-- [ ] **8 total cables** used (1 to wall + 7 between machines/switches)
+- [ ] **7 total cables** used (1 to wall + 6 between machines/switches)
 - [ ] **grml1 has 3 cables** (eth0, eth1, eth2)
 - [ ] **Switch A has 2 cables** (grml1 + grml3)
-- [ ] **Switch B has 5 cables** (grml1 + 4 internal machines)
+- [ ] **Switch B has 4 cables** (grml1 + 3 internal machines)
 
 ### Physical Connection Map
 ```
@@ -169,12 +167,11 @@ Cable 4: Switch A → grml3 eth0
 Cable 5: Switch B → grml2 eth0
 Cable 6: Switch B → grml4 eth0
 Cable 7: Switch B → grml5 eth0
-Cable 8: Switch B → grml6 eth0
 ```
 
 ### Zone Verification
 - [ ] **DMZ Zone:** Only grml3 connected
-- [ ] **Internal Zone:** grml2, grml4, grml5, grml6 connected
+- [ ] **Internal Zone:** grml2, grml4, grml5 connected
 - [ ] **No cross-connections:** grml3 NOT on internal switch
 
 ---
@@ -203,7 +200,7 @@ Cable 8: Switch B → grml6 eth0
 **Problem:** Don't know which switch is which
 **Solution:** 
 - Label switches clearly: "DMZ" and "INTERNAL"
-- Count connections: DMZ=2 cables, Internal=5 cables
+- Count connections: DMZ=2 cables, Internal=4 cables
 
 ---
 
@@ -227,7 +224,6 @@ After physical setup is complete:
 - **grml3:** 192.168.2.10 (Web Server - DMZ)
 - **grml4:** 192.168.1.4 (Client 1)
 - **grml5:** 192.168.1.5 (Client 2)
-- **grml6:** 192.168.1.6 (Management)
 
 ### Network Purposes
 - **External (141.76.46.x):** Internet connectivity

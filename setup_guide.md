@@ -6,12 +6,11 @@
 - **grml3**: Web Server (192.168.2.10) - **DMZ Network**
 - **grml4**: Client Workstation (192.168.1.4) - Internal Network
 - **grml5**: Client Workstation (192.168.1.5) - Internal Network
-- **grml6**: Management/Backup (192.168.1.6) - Internal Network
 
 **Network Segmentation:**
 - **External**: 141.76.46.0/24 (Public Internet)
 - **DMZ**: 192.168.2.0/24 (Web Server - Isolated)
-- **Internal**: 192.168.1.0/24 (Clients, DNS, Management)
+- **Internal**: 192.168.1.0/24 (Clients, DNS)
 
 ---
 
@@ -371,47 +370,6 @@ curl https://www.google.com
 
 ---
 
-## grml6: Management/Backup Configuration
-
-### 1. Configure Network Interface
-```bash
-sudo ip addr add 192.168.1.6/24 dev eth0
-sudo ip route add default via 192.168.1.1
-echo "nameserver 192.168.1.2" | sudo tee /etc/resolv.conf
-```
-
-### 2. Install Monitoring Tools
-```bash
-sudo apt update
-sudo apt install nmap tcpdump wireshark-common ngrep netstat-nat -y
-```
-
-### 3. Network Monitoring Scripts
-```bash
-# Create monitoring script
-cat > ~/network_monitor.sh << 'EOF'
-#!/bin/bash
-echo "=== Network Status Monitoring ==="
-echo "Date: $(date)"
-echo
-echo "=== DNS Resolution Test ==="
-nslookup www.company.local 192.168.1.2
-echo
-echo "=== Web Server Connectivity ==="
-curl -s -o /dev/null -w "HTTP Status: %{http_code}\n" http://192.168.1.3
-echo
-echo "=== External Connectivity ==="
-ping -c 3 8.8.8.8
-echo
-echo "=== Active Connections ==="
-netstat -tuln
-EOF
-
-chmod +x ~/network_monitor.sh
-```
-
----
-
 ## Testing and Validation
 
 ### 1. Network Connectivity Tests
@@ -419,7 +377,7 @@ chmod +x ~/network_monitor.sh
 # From any machine, test ping to all others
 ping 192.168.1.1  # Gateway
 ping 192.168.1.2  # DNS
-ping 192.168.1.3  # Web server
+ping 192.168.2.10 # Web server (DMZ)
 ping 192.168.1.4  # Client 1
 ping 192.168.1.5  # Client 2
 

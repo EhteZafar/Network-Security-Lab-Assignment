@@ -1,7 +1,7 @@
 # Network Security Lab - Quick Reference Checklist
 
 ## Pre-Lab Setup ✓
-- [ ] Boot all 6 grml computers (grml 2024.02 Standard)
+- [ ] Boot all 5 grml computers (grml 2024.02 Standard)
 - [ ] Connect network cables and switches (need 3 switch ports for grml1)
 - [ ] Verify physical connectivity
 - [ ] **Updated Architecture**: DMZ implementation (Internal: 192.168.1.0/24, DMZ: 192.168.2.0/24)
@@ -45,11 +45,7 @@
 - [ ] Install browser (`apt install firefox-esr`)
 - [ ] Install testing tools (`curl`, `nslookup`, `dig`)
 
-### grml6 - Management/Backup ✓
-- [ ] Set IP: 192.168.1.6/24
-- [ ] Install monitoring tools (`nmap`, `tcpdump`)
-- [ ] Create monitoring scripts
-- [ ] Keep as backup/troubleshooting station
+
 
 ## Phase 2: Service Configuration (120 min)
 
@@ -131,7 +127,7 @@
 
 ### If Time Runs Short:
 - [ ] Prioritize core functionality over advanced features
-- [ ] Use grml6 for quick troubleshooting
+- [ ] Use grml5 as backup client if needed
 - [ ] Focus on demonstration-ready components
 
 ## Quick Test Commands
