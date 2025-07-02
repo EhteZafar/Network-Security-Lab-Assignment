@@ -187,8 +187,8 @@ web     IN      A       192.168.2.10
 gateway IN      A       192.168.1.1
 client1 IN      A       192.168.1.4
 client2 IN      A       192.168.1.5
-; Add alias for your actual domain (internal resolution)
-netseclab   IN  A       192.168.2.10
+; Add your actual lab domain for internal resolution
+netseclab1.inf.tu-dresden.de.  IN  A  192.168.2.10
 EOF
 
 # Reverse zone file for Internal network (192.168.1.x)
