@@ -72,6 +72,12 @@ sudo iptables -A FORWARD -i eth2 -o eth1 -d 192.168.2.10 -p tcp --dport 443 -j A
 # DMZ to EXTERNAL: Allow web server outbound (for Let's Encrypt, updates)
 sudo iptables -A FORWARD -i eth1 -o eth0 -s 192.168.2.10 -j ACCEPT
 
+# DMZ to EXTERNAL: Allow DNS server outbound (for DNS forwarding to 141.30.1.1, updates)
+sudo iptables -A FORWARD -i eth1 -o eth0 -s 192.168.2.2 -p udp --dport 53 -j ACCEPT
+sudo iptables -A FORWARD -i eth1 -o eth0 -s 192.168.2.2 -p tcp --dport 53 -j ACCEPT
+sudo iptables -A FORWARD -i eth1 -o eth0 -s 192.168.2.2 -p tcp --dport 80 -j ACCEPT
+sudo iptables -A FORWARD -i eth1 -o eth0 -s 192.168.2.2 -p tcp --dport 443 -j ACCEPT
+
 # INTERNAL to DMZ: Allow DNS queries to DNS server
 sudo iptables -A FORWARD -i eth2 -o eth1 -d 192.168.2.2 -p tcp --dport 53 -j ACCEPT
 sudo iptables -A FORWARD -i eth2 -o eth1 -d 192.168.2.2 -p udp --dport 53 -j ACCEPT
@@ -154,6 +160,11 @@ zone "1.168.192.in-addr.arpa" {
     type master;
     file "/etc/bind/db.192.168.1";
 };
+
+zone "2.168.192.in-addr.arpa" {
+    type master;
+    file "/etc/bind/db.192.168.2";
+};
 EOF
 ```
 
@@ -170,16 +181,16 @@ sudo tee /etc/bind/db.company.local > /dev/null <<EOF
                          604800 )       ; Negative Cache TTL
 ;
 @       IN      NS      ns1.company.local.
-@       IN      A       192.168.1.3
-ns1     IN      A       192.168.1.2
-www     IN      A       192.168.1.3
-web     IN      A       192.168.1.3
+@       IN      A       192.168.2.10
+ns1     IN      A       192.168.2.2
+www     IN      A       192.168.2.10
+web     IN      A       192.168.2.10
 gateway IN      A       192.168.1.1
 client1 IN      A       192.168.1.4
 client2 IN      A       192.168.1.5
 EOF
 
-# Reverse zone file
+# Reverse zone file for Internal network (192.168.1.x)
 sudo tee /etc/bind/db.192.168.1 > /dev/null <<EOF
 \$TTL    604800
 @       IN      SOA     ns1.company.local. admin.company.local. (
@@ -191,10 +202,23 @@ sudo tee /etc/bind/db.192.168.1 > /dev/null <<EOF
 ;
 @       IN      NS      ns1.company.local.
 1       IN      PTR     gateway.company.local.
-2       IN      PTR     ns1.company.local.
-3       IN      PTR     www.company.local.
 4       IN      PTR     client1.company.local.
 5       IN      PTR     client2.company.local.
+EOF
+
+# Reverse zone file for DMZ network (192.168.2.x)
+sudo tee /etc/bind/db.192.168.2 > /dev/null <<EOF
+\$TTL    604800
+@       IN      SOA     ns1.company.local. admin.company.local. (
+                              1         ; Serial
+                         604800         ; Refresh
+                          86400         ; Retry
+                        2419200         ; Expire
+                         604800 )       ; Negative Cache TTL
+;
+@       IN      NS      ns1.company.local.
+2       IN      PTR     ns1.company.local.
+10      IN      PTR     www.company.local.
 EOF
 ```
 
