@@ -148,13 +148,13 @@ options {
 EOF
 ```
 
-### 4. Create Local Zone
+### 4. Create Local Zones (Simplified for your setup)
 ```bash
 # Edit /etc/bind/named.conf.local
 sudo tee /etc/bind/named.conf.local > /dev/null <<EOF
-zone "company.local" {
+zone "lab.local" {
     type master;
-    file "/etc/bind/db.company.local";
+    file "/etc/bind/db.lab.local";
 };
 
 zone "1.168.192.in-addr.arpa" {
@@ -169,57 +169,57 @@ zone "2.168.192.in-addr.arpa" {
 EOF
 ```
 
-### 5. Create Zone Files
+### 5. Create Zone Files (Simplified)
 ```bash
-# Forward zone file
-sudo tee /etc/bind/db.company.local > /dev/null <<EOF
+# Forward zone file - simple internal names
+sudo tee /etc/bind/db.lab.local > /dev/null <<EOF
 \$TTL    604800
-@       IN      SOA     ns1.company.local. admin.company.local. (
+@       IN      SOA     dns.lab.local. admin.lab.local. (
                               2         ; Serial
                          604800         ; Refresh
                           86400         ; Retry
                         2419200         ; Expire
                          604800 )       ; Negative Cache TTL
 ;
-@       IN      NS      ns1.company.local.
-@       IN      A       192.168.2.10
-ns1     IN      A       192.168.2.2
-www     IN      A       192.168.2.10
+@       IN      NS      dns.lab.local.
+dns     IN      A       192.168.2.2
 web     IN      A       192.168.2.10
 gateway IN      A       192.168.1.1
 client1 IN      A       192.168.1.4
 client2 IN      A       192.168.1.5
+; Add alias for your actual domain (internal resolution)
+netseclab   IN  A       192.168.2.10
 EOF
 
 # Reverse zone file for Internal network (192.168.1.x)
 sudo tee /etc/bind/db.192.168.1 > /dev/null <<EOF
 \$TTL    604800
-@       IN      SOA     ns1.company.local. admin.company.local. (
+@       IN      SOA     dns.lab.local. admin.lab.local. (
                               1         ; Serial
                          604800         ; Refresh
                           86400         ; Retry
                         2419200         ; Expire
                          604800 )       ; Negative Cache TTL
 ;
-@       IN      NS      ns1.company.local.
-1       IN      PTR     gateway.company.local.
-4       IN      PTR     client1.company.local.
-5       IN      PTR     client2.company.local.
+@       IN      NS      dns.lab.local.
+1       IN      PTR     gateway.lab.local.
+4       IN      PTR     client1.lab.local.
+5       IN      PTR     client2.lab.local.
 EOF
 
 # Reverse zone file for DMZ network (192.168.2.x)
 sudo tee /etc/bind/db.192.168.2 > /dev/null <<EOF
 \$TTL    604800
-@       IN      SOA     ns1.company.local. admin.company.local. (
+@       IN      SOA     dns.lab.local. admin.lab.local. (
                               1         ; Serial
                          604800         ; Refresh
                           86400         ; Retry
                         2419200         ; Expire
                          604800 )       ; Negative Cache TTL
 ;
-@       IN      NS      ns1.company.local.
-2       IN      PTR     ns1.company.local.
-10      IN      PTR     www.company.local.
+@       IN      NS      dns.lab.local.
+2       IN      PTR     dns.lab.local.
+10      IN      PTR     web.lab.local.
 EOF
 ```
 
@@ -242,19 +242,20 @@ echo "nameserver 192.168.2.2" | sudo tee /etc/resolv.conf
 echo "nameserver 141.30.1.1" | sudo tee -a /etc/resolv.conf
 ```
 
-### 2. Install Apache2 and Dependencies
+### 2. Install Apache2 and Dependencies (Your actual setup)
 ```bash
 sudo apt update
 sudo apt install apache2 certbot python3-certbot-apache -y
 ```
 
-### 3. Create Basic Website
+### 3. Create Basic Website (Optional - you can use default Apache page)
 ```bash
+# Create a simple website or use the default Apache page
 sudo tee /var/www/html/index.html > /dev/null <<EOF
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Company Web Server</title>
+    <title>Network Security Lab Web Server</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 40px; }
         .header { background-color: #f0f0f0; padding: 20px; border-radius: 5px; }
@@ -264,8 +265,8 @@ sudo tee /var/www/html/index.html > /dev/null <<EOF
 </head>
 <body>
     <div class="header">
-        <h1>Welcome to Company Web Server</h1>
-        <p>Network Security Lab Assignment</p>
+        <h1>Network Security Lab Web Server</h1>
+        <p>TU Dresden - Network Security Assignment</p>
     </div>
     
     <div class="content">
@@ -284,7 +285,7 @@ sudo tee /var/www/html/index.html > /dev/null <<EOF
             <li>HTTPS/TLS Encryption</li>
             <li>NAT Protection</li>
             <li>Firewall Rules</li>
-            <li>Local DNS Resolution</li>
+            <li>DMZ Network Segmentation</li>
         </ul>
     </div>
 </body>
@@ -292,68 +293,35 @@ sudo tee /var/www/html/index.html > /dev/null <<EOF
 EOF
 ```
 
-### 4. Configure Apache Virtual Host
+### 4. Set up Let's Encrypt SSL Certificate (Your actual setup)
 ```bash
-sudo tee /etc/apache2/sites-available/company.conf > /dev/null <<EOF
-<VirtualHost *:80>
-    ServerName www.company.local
-    ServerAlias company.local
-    DocumentRoot /var/www/html
-    
-    # Redirect to HTTPS
-    RewriteEngine On
-    RewriteCond %{HTTPS} off
-    RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
-</VirtualHost>
-
-<VirtualHost *:443>
-    ServerName www.company.local
-    ServerAlias company.local
-    DocumentRoot /var/www/html
-    
-    SSLEngine on
-    SSLCertificateFile /etc/ssl/certs/ssl-cert-snakeoil.pem
-    SSLCertificateKeyFile /etc/ssl/private/ssl-cert-snakeoil.key
-    
-    # Security headers
-    Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
-    Header always set X-Content-Type-Options nosniff
-    Header always set X-Frame-Options DENY
-    Header always set X-XSS-Protection "1; mode=block"
-</VirtualHost>
-EOF
-```
-
-### 5. Enable Modules and Site
-```bash
-sudo a2enmod ssl
-sudo a2enmod rewrite
-sudo a2enmod headers
-sudo a2ensite company.conf
-sudo a2dissite 000-default.conf
-sudo systemctl restart apache2
-```
-
-### 6. Set up Let's Encrypt (IMPORTANT: Use provided lab domain)
-```bash
-# CRITICAL: Use the provided lab domain (choose one)
-# Domain options: netseclab1.inf.tu-dresden.de (141.76.46.220) OR netseclab2.inf.tu-dresden.de (141.76.46.221)
-# The certificate MUST be issued on your submission date
+# This is what you actually ran:
 sudo certbot --apache -d netseclab1.inf.tu-dresden.de
 
-# Verify certificate date matches submission date
+# Verify certificate installation
 sudo certbot certificates
 
-# For local testing only (if provided domain not available yet)
-sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-    -keyout /etc/ssl/private/company.local.key \
-    -out /etc/ssl/certs/company.local.crt \
-    -subj "/C=DE/ST=Saxony/L=Dresden/O=Company/CN=www.company.local"
+# Check Apache configuration
+sudo apache2ctl configtest
 
-# Update virtual host with new certificate
-sudo sed -i 's|ssl-cert-snakeoil.pem|company.local.crt|g' /etc/apache2/sites-available/company.conf
-sudo sed -i 's|ssl-cert-snakeoil.key|company.local.key|g' /etc/apache2/sites-available/company.conf
+# Restart Apache
 sudo systemctl restart apache2
+sudo systemctl enable apache2
+```
+
+### 5. Verify Your Setup
+```bash
+# Test HTTPS locally
+curl -k https://localhost
+
+# Check certificate
+openssl s_client -connect localhost:443 -servername netseclab1.inf.tu-dresden.de
+
+# Check Apache status
+sudo systemctl status apache2
+
+# View current sites
+sudo apache2ctl -S
 ```
 
 ---
@@ -382,15 +350,15 @@ sudo apt update
 sudo apt install firefox-esr curl wget nmap dig -y
 ```
 
-### 4. Test Commands
+### 4. Test Commands (Updated for your setup)
 ```bash
-# Test DNS resolution
-nslookup www.company.local
+# Test DNS resolution for internal names
+nslookup web.lab.local
 nslookup google.com
 
-# Test web server access
-curl -k https://www.company.local
-curl -k https://192.168.1.3
+# Test your web server
+curl -k https://netseclab1.inf.tu-dresden.de
+curl -k https://192.168.2.10
 
 # Test external connectivity
 ping 8.8.8.8
@@ -414,24 +382,24 @@ ping 192.168.1.5  # Client 2
 ping 8.8.8.8
 ```
 
-### 2. DNS Tests
+### 2. DNS Tests (Updated)
 ```bash
 # From client machines
-nslookup www.company.local
+nslookup web.lab.local
 nslookup google.com
-dig @192.168.2.2 www.company.local
+dig @192.168.2.2 web.lab.local
 ```
 
-### 3. Web Server Tests
+### 3. Web Server Tests (Updated for your actual domain)
 ```bash
-# HTTP access (should redirect to HTTPS)
-curl -v http://www.company.local
+# Test your actual domain (should work with Let's Encrypt certificate)
+curl -I https://netseclab1.inf.tu-dresden.de
 
-# HTTPS access
-curl -k https://www.company.local
+# Test by IP address
+curl -k https://192.168.2.10
 
-# From external (if accessible)
-curl -k https://[external-ip]
+# Test from external internet (if accessible)
+curl -I https://netseclab1.inf.tu-dresden.de
 ```
 
 ### 4. Security Verification
