@@ -4,7 +4,7 @@ NETWORK SECURITY LAB - SCHEMATIC DRAWING
                            🌐 INTERNET
                                 |
                     ┌─────────────────────────┐
-                    │   Wall Port EV3-2-2     │
+                    │  Wall Port EV2.2.2-5/14 │
                     │   Gateway: 141.76.46.254│
                     └─────────────┬───────────┘
                                   │
@@ -22,30 +22,34 @@ NETWORK SECURITY LAB - SCHEMATIC DRAWING
                     │    DMZ    │   │      INTERNAL NETWORK     │
                     │192.168.2.0│   │      192.168.1.0/24      │
                     │    /24    │   │                           │
-                    │           │   │  ┌─────┐ ┌─────┐ ┌─────┐  │
-                    │ ┌───────┐ │   │  │grml2│ │grml4│ │grml5│  │
-                    │ │ grml3 │ │   │  │ DNS │ │CLT1 │ │CLT2 │  │
-                    │ │  WEB  │ │   │  │.1.2 │ │.1.4 │ │.1.5 │  │
-                    │ │ .2.10 │ │   │  └─────┘ └─────┘ └─────┘  │
-                    │ └───────┘ │   │                           │
+                    │┌─────┐    │   │         ┌─────┐ ┌─────┐   │
+                    ││grml2│    │   │         │grml4│ │grml5│   │
+                    ││ DNS │    │   │         │CLT1 │ │CLT2 │   │
+                    ││.2.2 │    │   │         │.1.4 │ │.1.5 │   │
+                    │└─────┘    │   │         └─────┘ └─────┘   │
+                    │┌─────┐    │   │                           │
+                    ││grml3│    │   │                           │
+                    ││ WEB │    │   │                           │
+                    ││.2.10│    │   │                           │
+                    │└─────┘    │   │                           │
                     │           │   │                           │
                     └───────────┘   └───────────────────────────┘
 
 FIREWALL RULES SUMMARY:
 ======================
-External → DMZ:     Only ports 80,443 to grml3
+External → DMZ:     Only ports 80,443 to grml3 (web server)
 DMZ → External:     Outbound allowed (updates, Let's Encrypt)
-DMZ → Internal:     Only DNS queries (port 53) to grml2
-Internal → DMZ:     Only web access (ports 80,443) to grml3
+Internal → DMZ:     DNS queries (port 53) to grml2, web (80,443) to grml3
+DMZ ↔ DMZ:         DNS and Web servers can communicate
 Internal → External: All outbound traffic allowed
 
 SERVICES:
 =========
 grml1: NAT Gateway + Firewall (iptables)
-grml2: DNS Server (BIND9) - company.local + forwarder
-grml3: Web Server (Apache2 + TLS) - netseclab1.inf.tu-dresden.de
-grml4: Client Workstation (Firefox + testing tools)
-grml5: Client Workstation (Firefox + testing tools)
+grml2: DNS Server (BIND9) - DMZ (192.168.2.2)
+grml3: Web Server (Apache2 + TLS) - DMZ (192.168.2.10)
+grml4: Client Workstation (Firefox + testing tools) - Internal
+grml5: Client Workstation (Firefox + testing tools) - Internal
 
 DOMAIN & CERTIFICATES:
 =====================

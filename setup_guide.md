@@ -2,15 +2,15 @@
 
 ## Machine Roles Overview (DMZ Architecture)
 - **grml1**: NAT Gateway Machine (Public: 141.76.46.220, DMZ: 192.168.2.1, Internal: 192.168.1.1)
-- **grml2**: DNS Server (192.168.1.2) - Internal Network
+- **grml2**: DNS Server (192.168.2.2) - **DMZ Network**
 - **grml3**: Web Server (192.168.2.10) - **DMZ Network**
 - **grml4**: Client Workstation (192.168.1.4) - Internal Network
 - **grml5**: Client Workstation (192.168.1.5) - Internal Network
 
 **Network Segmentation:**
 - **External**: 141.76.46.0/24 (Public Internet)
-- **DMZ**: 192.168.2.0/24 (Web Server - Isolated)
-- **Internal**: 192.168.1.0/24 (Clients, DNS)
+- **DMZ**: 192.168.2.0/24 (Web Server, DNS Server - Isolated)
+- **Internal**: 192.168.1.0/24 (Client Workstations)
 
 ---
 
@@ -71,9 +71,9 @@ sudo iptables -A FORWARD -i eth2 -o eth1 -d 192.168.2.10 -p tcp --dport 443 -j A
 # DMZ to EXTERNAL: Allow web server outbound (for Let's Encrypt, updates)
 sudo iptables -A FORWARD -i eth1 -o eth0 -s 192.168.2.10 -j ACCEPT
 
-# DMZ to INTERNAL: Allow DNS queries only
-sudo iptables -A FORWARD -i eth1 -o eth2 -s 192.168.2.10 -d 192.168.1.2 -p tcp --dport 53 -j ACCEPT
-sudo iptables -A FORWARD -i eth1 -o eth2 -s 192.168.2.10 -d 192.168.1.2 -p udp --dport 53 -j ACCEPT
+# INTERNAL to DMZ: Allow DNS queries to DNS server
+sudo iptables -A FORWARD -i eth2 -o eth1 -d 192.168.2.2 -p tcp --dport 53 -j ACCEPT
+sudo iptables -A FORWARD -i eth2 -o eth1 -d 192.168.2.2 -p udp --dport 53 -j ACCEPT
 
 # Management access (SSH from internal only)
 sudo iptables -A INPUT -s 192.168.1.0/24 -p tcp --dport 22 -j ACCEPT
@@ -103,10 +103,10 @@ sudo apt update
 sudo apt install bind9 bind9utils bind9-doc -y
 ```
 
-### 2. Configure Network Interface
+### 2. Configure Network Interface (DMZ)
 ```bash
-sudo ip addr add 192.168.1.2/24 dev eth0
-sudo ip route add default via 192.168.1.1
+sudo ip addr add 192.168.2.2/24 dev eth0
+sudo ip route add default via 192.168.2.1
 ```
 
 ### 3. Configure BIND9
@@ -116,14 +116,14 @@ sudo tee /etc/bind/named.conf.options > /dev/null <<EOF
 options {
     directory "/var/cache/bind";
     
-    // Listen on internal interface
-    listen-on { 127.0.0.1; 192.168.1.2; };
+    // Listen on DMZ interface
+    listen-on { 127.0.0.1; 192.168.2.2; };
     
-    // Allow queries from internal network
-    allow-query { localhost; 192.168.1.0/24; };
+    // Allow queries from internal network and DMZ
+    allow-query { localhost; 192.168.1.0/24; 192.168.2.0/24; };
     
-    // Disable recursion for external queries (security)
-    allow-recursion { localhost; 192.168.1.0/24; };
+    // Allow recursion for internal and DMZ networks
+    allow-recursion { localhost; 192.168.1.0/24; 192.168.2.0/24; };
     
     // Forwarders for external DNS (use ZIH DNS as recommended)
     forwarders {
@@ -211,7 +211,7 @@ sudo systemctl enable bind9
 ```bash
 sudo ip addr add 192.168.2.10/24 dev eth0
 sudo ip route add default via 192.168.2.1
-echo "nameserver 192.168.1.2" | sudo tee /etc/resolv.conf
+echo "nameserver 192.168.2.2" | sudo tee /etc/resolv.conf
 echo "nameserver 141.30.1.1" | sudo tee -a /etc/resolv.conf
 ```
 
@@ -247,7 +247,7 @@ sudo tee /var/www/html/index.html > /dev/null <<EOF
             <li>Server IP: 192.168.2.10 (DMZ)</li>
             <li>Domain: netseclab1.inf.tu-dresden.de</li>
             <li>TLS/SSL: Enabled (Let's Encrypt)</li>
-            <li>DNS Server: 192.168.1.2 + 141.30.1.1</li>
+            <li>DNS Server: 192.168.2.2 + 141.30.1.1</li>
         </ul>
     </div>
     
@@ -337,14 +337,14 @@ sudo systemctl restart apache2
 ```bash
 sudo ip addr add 192.168.1.4/24 dev eth0
 sudo ip route add default via 192.168.1.1
-echo "nameserver 192.168.1.2" | sudo tee /etc/resolv.conf
+echo "nameserver 192.168.2.2" | sudo tee /etc/resolv.conf
 ```
 
 ### 2. Configure Network Interface (grml5)
 ```bash
 sudo ip addr add 192.168.1.5/24 dev eth0
 sudo ip route add default via 192.168.1.1
-echo "nameserver 192.168.1.2" | sudo tee /etc/resolv.conf
+echo "nameserver 192.168.2.2" | sudo tee /etc/resolv.conf
 ```
 
 ### 3. Install Web Browser and Tools
@@ -376,7 +376,7 @@ curl https://www.google.com
 ```bash
 # From any machine, test ping to all others
 ping 192.168.1.1  # Gateway
-ping 192.168.1.2  # DNS
+ping 192.168.2.2  # DNS (DMZ)
 ping 192.168.2.10 # Web server (DMZ)
 ping 192.168.1.4  # Client 1
 ping 192.168.1.5  # Client 2
@@ -390,7 +390,7 @@ ping 8.8.8.8
 # From client machines
 nslookup www.company.local
 nslookup google.com
-dig @192.168.1.2 www.company.local
+dig @192.168.2.2 www.company.local
 ```
 
 ### 3. Web Server Tests

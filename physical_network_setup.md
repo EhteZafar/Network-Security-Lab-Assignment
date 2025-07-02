@@ -28,8 +28,8 @@ Before starting, make sure you have:
    DMZ     INTERNAL
    Zone     Zone
      ↓       ↓
-  grml3   grml2,grml4,grml5
- (Web)    (Clients/DNS)
+grml2,grml3   grml4,grml5
+(DNS,Web)     (Clients)
 ```
 
 ---
@@ -43,7 +43,7 @@ Before starting, make sure you have:
 Internet → Wall Port → Cable → grml1 eth0
 ```
 **Instructions:**
-1. Locate wall port **EV3-2-2 5/9** or **EV3-2-2 5/21**
+1. Locate wall port **EV2.2.2 - 5/14**
 2. Take 1 Ethernet cable
 3. Plug one end into the **wall port**
 4. Plug other end into **grml1's eth0** (usually first/leftmost Ethernet port)
@@ -75,22 +75,23 @@ grml1 eth2 → Cable → Switch B
 
 ## 🔒 **Step 2: Connect DMZ Zone (Semi-Public Area)**
 
-**DMZ = Demilitarized Zone - for your web server**
+**DMZ = Demilitarized Zone - for DNS and web servers**
 
-### Connect grml3 (Web Server)
+### Connect grml2 (DNS Server) and grml3 (Web Server)
 ```
-Switch A (DMZ) → Cable → grml3 eth0
+Switch A (DMZ) connections:
+├─ grml1 eth1 (already connected)
+├─ grml2 (DNS Server)
+└─ grml3 (Web Server)
 ```
 **Instructions:**
-1. Take 1 Ethernet cable
-2. Plug one end into **Switch A** (any free port)
-3. Plug other end into **grml3's eth0**
-4. **Result:** grml3 is now in the DMZ (will be 192.168.2.10)
+1. **grml2 (DNS):** Cable from Switch A → grml2 eth0
+2. **grml3 (Web):** Cable from Switch A → grml3 eth0
 
 **DMZ Zone Complete:**
-- Switch A has 2 cables: grml1 eth1 + grml3
-- grml3 is isolated from internal machines
-- grml3 can only reach Internet and DNS (controlled by grml1)
+- Switch A has 3 cables: grml1 eth1 + grml2 + grml3
+- Both servers are isolated from client machines
+- DNS and Web servers can communicate within DMZ
 
 ---
 
@@ -98,24 +99,22 @@ Switch A (DMZ) → Cable → grml3 eth0
 
 **Internal = Your secure private network**
 
-### Connect All Internal Machines
+### Connect Client Workstations
 ```
 Switch B (Internal) connections:
 ├─ grml1 eth2 (already connected)
-├─ grml2 (DNS Server)
 ├─ grml4 (Client 1)
 └─ grml5 (Client 2)
 ```
 
 **Instructions:**
-1. **grml2 (DNS):** Cable from Switch B → grml2 eth0
-2. **grml4 (Client 1):** Cable from Switch B → grml4 eth0
-3. **grml5 (Client 2):** Cable from Switch B → grml5 eth0
+1. **grml4 (Client 1):** Cable from Switch B → grml4 eth0
+2. **grml5 (Client 2):** Cable from Switch B → grml5 eth0
 
 **Internal Zone Complete:**
-- Switch B has 4 cables total
-- All internal machines can talk to each other
-- All can reach Internet through grml1
+- Switch B has 3 cables total
+- Client machines can talk to each other
+- Clients reach DNS/Web through grml1 (controlled access)
 
 ---
 
@@ -155,24 +154,24 @@ After connecting all cables, verify:
 - [ ] All Ethernet ports show **green/orange LED lights**
 - [ ] **7 total cables** used (1 to wall + 6 between machines/switches)
 - [ ] **grml1 has 3 cables** (eth0, eth1, eth2)
-- [ ] **Switch A has 2 cables** (grml1 + grml3)
-- [ ] **Switch B has 4 cables** (grml1 + 3 internal machines)
+- [ ] **Switch A has 3 cables** (grml1 + grml2 + grml3)
+- [ ] **Switch B has 3 cables** (grml1 + 2 client machines)
 
 ### Physical Connection Map
 ```
-Cable 1: Wall Port EV3-2-2 → grml1 eth0
+Cable 1: Wall Port EV2.2.2 - 5/14 → grml1 eth0
 Cable 2: grml1 eth1 → Switch A
 Cable 3: grml1 eth2 → Switch B
-Cable 4: Switch A → grml3 eth0
-Cable 5: Switch B → grml2 eth0
-Cable 6: Switch B → grml4 eth0
-Cable 7: Switch B → grml5 eth0
+Cable 4: Switch A → grml2 eth0 (DNS)
+Cable 5: Switch A → grml3 eth0 (Web)
+Cable 6: Switch B → grml4 eth0 (Client)
+Cable 7: Switch B → grml5 eth0 (Client)
 ```
 
 ### Zone Verification
-- [ ] **DMZ Zone:** Only grml3 connected
-- [ ] **Internal Zone:** grml2, grml4, grml5 connected
-- [ ] **No cross-connections:** grml3 NOT on internal switch
+- [ ] **DMZ Zone:** grml2 (DNS) and grml3 (Web) connected
+- [ ] **Internal Zone:** Only grml4, grml5 (clients) connected
+- [ ] **No cross-connections:** DNS/Web servers NOT on internal switch
 
 ---
 
@@ -220,7 +219,7 @@ After physical setup is complete:
 
 ### IP Address Plan
 - **grml1:** 141.76.46.220 (eth0), 192.168.2.1 (eth1), 192.168.1.1 (eth2)
-- **grml2:** 192.168.1.2 (DNS Server)
+- **grml2:** 192.168.2.2 (DNS Server - DMZ)
 - **grml3:** 192.168.2.10 (Web Server - DMZ)
 - **grml4:** 192.168.1.4 (Client 1)
 - **grml5:** 192.168.1.5 (Client 2)
