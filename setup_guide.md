@@ -18,15 +18,16 @@
 
 ### 1. Network Interface Configuration (Three-Zone Setup)
 ```bash
-# Configure external interface (use provided lab IP)
+# Configure external interface (use any available port)
 sudo ip addr add 141.76.46.220/24 dev eth0
 sudo ip route add default via 141.76.46.254
+sudo ip link set eth0 up
 
-# Configure DMZ interface (for web server)
+# Configure DMZ interface (connects to DMZ switch)
 sudo ip addr add 192.168.2.1/24 dev eth1
 sudo ip link set eth1 up
 
-# Configure internal interface (for clients/DNS).
+# Configure internal interface (connects to Internal switch)
 sudo ip addr add 192.168.1.1/24 dev eth2
 sudo ip link set eth2 up
 
