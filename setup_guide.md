@@ -112,8 +112,9 @@ sudo apt install bind9 bind9utils bind9-doc -y
 
 ### 2. Configure Network Interface (DMZ)
 ```bash
-sudo ip addr add 192.168.2.2/24 dev eth0
+sudo ip addr add 192.168.2.2/24 dev eth1
 sudo ip route add default via 192.168.2.1
+sudo ip link set eth1 up
 ```
 
 ### 3. Configure BIND9
@@ -234,8 +235,9 @@ sudo systemctl enable bind9
 
 ### 1. Configure Network Interface (DMZ)
 ```bash
-sudo ip addr add 192.168.2.10/24 dev eth0
+sudo ip addr add 192.168.2.10/24 dev eth1
 sudo ip route add default via 192.168.2.1
+sudo ip link set eth1 up
 echo "nameserver 192.168.2.2" | sudo tee /etc/resolv.conf
 echo "nameserver 141.30.1.1" | sudo tee -a /etc/resolv.conf
 ```
@@ -360,15 +362,17 @@ sudo systemctl restart apache2
 
 ### 1. Configure Network Interface (grml4)
 ```bash
-sudo ip addr add 192.168.1.4/24 dev eth0
+sudo ip addr add 192.168.1.4/24 dev eth1
 sudo ip route add default via 192.168.1.1
+sudo ip link set eth1 up
 echo "nameserver 192.168.2.2" | sudo tee /etc/resolv.conf
 ```
 
 ### 2. Configure Network Interface (grml5)
 ```bash
-sudo ip addr add 192.168.1.5/24 dev eth0
+sudo ip addr add 192.168.1.5/24 dev eth1
 sudo ip route add default via 192.168.1.1
+sudo ip link set eth1 up
 echo "nameserver 192.168.2.2" | sudo tee /etc/resolv.conf
 ```
 
